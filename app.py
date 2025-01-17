@@ -1,10 +1,8 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from io import StringIO
 
 # Funções de gráficos (já fornecidas)
-# Gráfico de Pizza
 def grafico_pizza(dados, coluna_analisada):
     dados_agrupados = dados[coluna_analisada].value_counts()
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -18,7 +16,6 @@ def grafico_pizza(dados, coluna_analisada):
     ax.set_title(f'Distribuição por {coluna_analisada}', fontsize=16)
     st.pyplot(fig)
 
-# Gráfico de Barras
 def grafico_barras(dados, coluna_analisada):
     dados_agrupados = dados[coluna_analisada].value_counts()
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -29,25 +26,29 @@ def grafico_barras(dados, coluna_analisada):
     ax.tick_params(axis='x', rotation=45)
     st.pyplot(fig)
 
-# Gráfico de Comparação com a Amostra
 def grafico_comparativo(dados, colunas):
-    # Verificar se a coluna 'Amostra' existe
-    if 'amostra' not in dados.columns:
-        st.error("A coluna 'Amostra' não foi encontrada no arquivo CSV. Verifique o nome da coluna.")
+    # Permitir que o usuário escolha as colunas para comparação
+    colunas_selecionadas = st.sidebar.multiselect(
+        "Escolha as colunas para comparar",
+        options=colunas,
+        default=colunas
+    )
+    
+    if not colunas_selecionadas:
+        st.error("Por favor, selecione pelo menos uma coluna para comparar.")
         return
 
     fig, ax = plt.subplots(figsize=(12, 8))
-    for coluna in colunas:
-        ax.plot(dados['amostra'], dados[coluna], marker='o', label=coluna)
+    for coluna in colunas_selecionadas:
+        ax.plot(dados[coluna], marker='o', label=coluna)
 
-    ax.set_title(f'Comparação com Amostra', fontsize=20)
-    ax.set_xlabel('Amostra', fontsize=12)
+    ax.set_title(f'Comparação entre Colunas', fontsize=20)
+    ax.set_xlabel('Índice', fontsize=12)
     ax.set_ylabel('Valores', fontsize=12)
     ax.legend(loc='best', fontsize=10)
     ax.grid(True)
     st.pyplot(fig)
 
-# Gráfico Individual para Cada Coluna
 def grafico_individual_por_coluna(dados, coluna_comparacao='amostra'):
     colunas = dados.columns
     for coluna in colunas:
@@ -91,8 +92,8 @@ if uploaded_file is not None:
         grafico_barras(df, coluna)
 
     elif grafico_opcao == "Gráfico de Comparação":
+        # Permitir que o usuário escolha todas as colunas disponíveis
         colunas = df.columns.tolist()
-        colunas = [col for col in colunas if col != 'amostra']  # Excluir a coluna 'Amostra'
         grafico_comparativo(df, colunas)
 
     elif grafico_opcao == "Gráfico Individual por Coluna":

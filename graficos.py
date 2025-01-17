@@ -4,17 +4,26 @@ import matplotlib.pyplot as plt
 
 # Gráfico de Pizza
 def grafico_pizza(dados, coluna_analisada):
+    # Validar existência da coluna
+    if coluna_analisada not in dados.columns:
+        st.error(f"A coluna '{coluna_analisada}' não foi encontrada no DataFrame.")
+        return
+
+    # Validar tipo de dados da coluna
+    if dados[coluna_analisada].dtype not in ['object', 'category']:
+        st.warning(f"A coluna '{coluna_analisada}' pode não ser adequada para um gráfico de pizza.")
+    
     # Contar os valores únicos na coluna analisada
     dados_agrupados = dados[coluna_analisada].value_counts()
 
     # Criar o gráfico
-    fig, ax = plt.subplots(figsize=(8, 8))  # Aumentar o tamanho do gráfico
+    fig, ax = plt.subplots(figsize=(8, 8))
     ax.pie(
         dados_agrupados,
         labels=dados_agrupados.index,
         autopct='%1.1f%%',
         startangle=90,
-        labeldistance=1.1  # Ajustar a posição dos rótulos para evitar sobreposição
+        labeldistance=1.1
     )
     ax.set_title(f'Distribuição por {coluna_analisada}', fontsize=16)
 
