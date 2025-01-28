@@ -1,10 +1,11 @@
-import matplotlib.pyplot as plt
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 
 class Graficos:
     @staticmethod
-    def grafico_pizza(dados, coluna_analisada):
+    def grafico_pizza_coluna(dados, coluna_analisada):
+        # Gráfico de pizza baseado em uma coluna
         dados_agrupados = dados[coluna_analisada].value_counts()
         fig, ax = plt.subplots(figsize=(8, 8))
         ax.pie(
@@ -18,32 +19,50 @@ class Graficos:
         st.pyplot(fig)
 
     @staticmethod
-    def grafico_barras(dados, coluna_analisada):
-        dados_agrupados = dados[coluna_analisada].value_counts()
+    def grafico_pizza_linha(dados, linha_analisada):
+        # Seleciona a linha como uma Series
+        dados_linha = dados.iloc[linha_analisada]
+        
+        # Filtra apenas valores numéricos da linha
+        dados_numericos = dados_linha[dados_linha.apply(lambda x: isinstance(x, (int, float)))]
+        
+        if dados_numericos.empty:
+            st.error("A linha selecionada não contém valores numéricos suficientes para gerar um gráfico de pizza.")
+            return
+
+        # Criação do gráfico de pizza
+        fig, ax = plt.subplots(figsize=(8, 8))
+        ax.pie(
+            dados_numericos,
+            labels=dados_numericos.index,
+            autopct='%1.1f%%',
+            startangle=90,
+            labeldistance=1.1
+        )
+        ax.set_title(f"Distribuição de valores na linha {linha_analisada}", fontsize=16)
+        st.pyplot(fig)
+
+    @staticmethod
+    def grafico_barras(dados, linha, colunas):
+        # Gráfico de barras: Eixo X = linha, Eixo Y = valores das colunas selecionadas
+        dados_linha = dados.loc[linha, colunas]
         fig, ax = plt.subplots(figsize=(10, 5))
-        ax.bar(dados_agrupados.index, dados_agrupados.values, color='skyblue')
-        ax.set_title(f'Distribuição de {coluna_analisada}', fontsize=14)
-        ax.set_xlabel(coluna_analisada, fontsize=12)
-        ax.set_ylabel('Quantidade', fontsize=12)
+        ax.bar(dados_linha.index, dados_linha.values, color='skyblue')
+        ax.set_title(f'Valores da Linha {linha}', fontsize=14)
+        ax.set_xlabel('Colunas', fontsize=12)
+        ax.set_ylabel('Valores', fontsize=12)
         ax.tick_params(axis='x', rotation=45)
         st.pyplot(fig)
 
     @staticmethod
-    def grafico_comparativo(dados, colunas):
-        colunas_selecionadas = st.sidebar.multiselect(
-            "Escolha as colunas para comparar",
-            options=colunas,
-            default=colunas
-        )
-        if not colunas_selecionadas:
-            st.error("Por favor, selecione pelo menos uma coluna para comparar.")
-            return
-
+    def grafico_comparativo(dados, linhas, coluna):
+        # Gráfico comparativo entre linhas para uma coluna específica
         fig, ax = plt.subplots(figsize=(12, 8))
-        for coluna in colunas_selecionadas:
-            ax.plot(dados[coluna], marker='o', label=coluna)
+        for linha in linhas:
+            valores = dados.loc[linha, coluna]
+            ax.plot(valores, marker='o', label=f'Linha {linha}')
 
-        ax.set_title(f'Comparação entre Colunas', fontsize=20)
+        ax.set_title(f'Comparação entre Linhas para a Coluna {coluna}', fontsize=20)
         ax.set_xlabel('Índice', fontsize=12)
         ax.set_ylabel('Valores', fontsize=12)
         ax.legend(loc='best', fontsize=10)
@@ -51,18 +70,15 @@ class Graficos:
         st.pyplot(fig)
 
     @staticmethod
-    def grafico_individual_por_coluna(dados):
-        colunas = dados.columns
-        coluna_comparacao = st.sidebar.selectbox(
-            "Escolha a coluna de comparação", options=colunas
-        )
-        for coluna in colunas:
-            if coluna != coluna_comparacao:
-                st.markdown(f"### Gráfico para {coluna}")
-                fig, ax = plt.subplots(figsize=(10, 5))
-                ax.plot(dados[coluna_comparacao], dados[coluna], marker='o', color='green')
-                ax.set_title(f'{coluna_comparacao} vs {coluna}', fontsize=14)
-                ax.set_xlabel(coluna_comparacao, fontsize=12)
-                ax.set_ylabel(coluna, fontsize=12)
-                ax.grid(True)
-                st.pyplot(fig)
+    def grafico_individual_por_linha(dados, linhas, colunas):
+        # Gráficos individuais: Comparação entre as linhas escolhidas para várias colunas
+        for linha in linhas:
+            st.markdown(f"### Gráfico para Linha {linha}")
+            fig, ax = plt.subplots(figsize=(10, 5))
+            valores = dados.loc[linha, colunas]
+            ax.plot(valores.index, valores.values, marker='o', color='green')
+            ax.set_title(f'Linha {linha} para Colunas Selecionadas', fontsize=14)
+            ax.set_xlabel('Colunas', fontsize=12)
+            ax.set_ylabel('Valores', fontsize=12)
+            ax.grid(True)
+            st.pyplot(fig)

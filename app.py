@@ -2,10 +2,12 @@ import streamlit as st
 import pandas as pd
 from graficos import Graficos
 
+# App principal
 st.title("Análise Gráfica das Amostras")
-graficos = Graficos()
 # Upload do arquivo CSV
 uploaded_file = st.file_uploader("Escolha um arquivo CSV", type=["csv"])
+
+graficos = Graficos()
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, decimal=',')
@@ -14,33 +16,38 @@ if uploaded_file is not None:
     st.sidebar.title("Selecione o Gráfico")
     grafico_opcao = st.sidebar.selectbox(
         "Escolha o tipo de gráfico",
-        ["Gráfico de Pizza", "Gráfico de Barras", "Gráfico de Comparação", "Gráfico Individual por Coluna"]
+        ["Gráfico de Pizza", "Gráfico de Barras", "Gráfico de Comparação", "Gráfico Individual por Linha"]
     )
 
     if grafico_opcao == "Gráfico de Pizza":
-        # Certifique-se de que uma coluna é selecionada
-        coluna = st.sidebar.selectbox("Escolha a coluna para o gráfico de pizza", df.columns)
-        if coluna:
-            Graficos.grafico_pizza(df, coluna)
-        else:
-            st.error("Por favor, selecione uma coluna para gerar o gráfico de pizza.")
+        pizza_tipo = st.sidebar.radio("Deseja gerar o gráfico por:", ("Coluna", "Linha"))
+        if pizza_tipo == "Coluna":
+            coluna = st.sidebar.selectbox("Escolha a coluna para o gráfico de pizza", df.columns)
+            graficos.grafico_pizza_coluna(df, coluna)
+        elif pizza_tipo == "Linha":
+            linha = st.sidebar.selectbox("Escolha a linha para o gráfico de pizza", df.index)
+            graficos.grafico_pizza_linha(df, linha)
 
     elif grafico_opcao == "Gráfico de Barras":
-        coluna = st.sidebar.selectbox("Escolha a coluna para o gráfico de barras", df.columns)
-        if coluna:
-            Graficos.grafico_barras(df, coluna)
+        linha = st.sidebar.selectbox("Escolha a linha para o eixo X", df.index)
+        colunas = st.sidebar.multiselect("Escolha as colunas para o eixo Y", df.columns)
+        if colunas:
+            graficos.grafico_barras(df, linha, colunas)
         else:
-            st.error("Por favor, selecione uma coluna para gerar o gráfico de barras.")
+            st.error("Por favor, selecione pelo menos uma coluna para gerar o gráfico.")
 
     elif grafico_opcao == "Gráfico de Comparação":
-        colunas = df.columns.tolist()
-        if colunas:
-            Graficos.grafico_comparativo(df, colunas)
+        linhas = st.sidebar.multiselect("Escolha as linhas para comparação", df.index)
+        coluna = st.sidebar.selectbox("Escolha a coluna para comparação", df.columns)
+        if linhas and coluna:
+            graficos.grafico_comparativo(df, linhas, coluna)
         else:
-            st.error("Por favor, selecione pelo menos uma coluna para comparação.")
+            st.error("Por favor, selecione pelo menos uma linha e uma coluna para gerar o gráfico.")
 
-    elif grafico_opcao == "Gráfico Individual por Coluna":
-        if not df.empty:
-            Graficos.grafico_individual_por_coluna(df)
+    elif grafico_opcao == "Gráfico Individual por Linha":
+        linhas = st.sidebar.multiselect("Escolha as linhas para comparação", df.index)
+        colunas = st.sidebar.multiselect("Escolha as colunas para análise", df.columns)
+        if linhas and colunas:
+            graficos.grafico_individual_por_linha(df, linhas, colunas)
         else:
-            st.error("Os dados carregados estão vazios.")
+            st.error("Por favor, selecione pelo menos uma linha e uma coluna para gerar os gráficos.")
